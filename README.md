@@ -4,21 +4,19 @@
 
 Make sure that the raspberry is connected to your current network under the dns "raspberrypi"
 
-```bash
-mvn clean install
-scp ./target/raspberry-led.jar antoine@raspberrypi:/home/antoine/Documents/raspberry-led.jar
-ssh antoine@raspberrypi "java -jar /home/antoine/Documents/raspberry-led.jar"
+```shell
+./remote_run.sh
 ```
 
 ## SSH to Raspberry pi
 
-```bash
+```shell
 ssh antoine@raspberrypi
 ```
 
 Config to avoid password
 
-```bash
+```shell
 ssh-keygen
 ssh-copy-id antoine@raspberrypi
 ```
