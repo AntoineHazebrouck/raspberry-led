@@ -1,7 +1,12 @@
 package antoine.raspberry_led;
 
 import com.pi4j.Pi4J;
+import com.pi4j.io.gpio.digital.DigitalOutput;
+import com.pi4j.io.gpio.digital.DigitalState;
+
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -10,12 +15,35 @@ import org.springframework.stereotype.Service;
 public class Main {
 
     public void run() {
-        var pi4j = Pi4J.newAutoContext();
+        var pi = Pi4J.newAutoContext();
 
-        var led = pi4j.digitalOutput().create(17);
+        List<DigitalOutput> leds = Stream.of(
+            17,
+            18,
+            27
+            // 22,
+            // 23,
+            // 24,
+            // 25,
+            // 2,
+            // 3,
+            // 8
+        )
+            .map(pin -> pi.digitalOutput().<DigitalOutput>create(pin))
+            .toList();
 
-        led.blink(1, 100, TimeUnit.SECONDS);
+        for (int i = 0; i < 10; i++) {
+            leds.forEach(led -> {
+                turnOff(leds);
 
-        pi4j.shutdown();
+                led.blink(500, 1, TimeUnit.MILLISECONDS, DigitalState.LOW);
+            });
+        }
+
+        pi.shutdown();
+    }
+
+    private void turnOff(List<DigitalOutput> leds) {
+        leds.forEach(led -> led.high());
     }
 }
