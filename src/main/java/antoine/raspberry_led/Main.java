@@ -1,12 +1,7 @@
 package antoine.raspberry_led;
 
-import com.pi4j.Pi4J;
-import com.pi4j.io.gpio.digital.DigitalOutput;
-import com.pi4j.io.gpio.digital.DigitalState;
-
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
+import com.pi4j.context.Context;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -14,36 +9,28 @@ import org.springframework.stereotype.Service;
 @Service
 public class Main {
 
-    public void run() {
-        var pi = Pi4J.newAutoContext();
+    public void run(Context pi) throws Exception {
+        var button = pi.digitalInput().create(18);
+        var led = pi.digitalOutput().create(17);
 
-        List<DigitalOutput> leds = Stream.of(
-            17,
-            18,
-            27
-            // 22,
-            // 23,
-            // 24,
-            // 25,
-            // 2,
-            // 3,
-            // 8
-        )
-            .map(pin -> pi.digitalOutput().<DigitalOutput>create(pin))
-            .toList();
+        button.addListener(event -> {
+            log.info("event = " + event.state());
+            switch (event.state()) {
+                // it is reverted since the circuit is pull down (the 3.3V goes to the ground when pressing the button, and by default it goes through)
+                case HIGH -> {
+                    led.low();
+                }
+                case LOW -> {
+                    led.high();
+                }
+                default -> {
+                    log.error("button state unknown");
+                }
+            }
+        });
 
-        for (int i = 0; i < 10; i++) {
-            leds.forEach(led -> {
-                turnOff(leds);
-
-                led.blink(500, 1, TimeUnit.MILLISECONDS, DigitalState.LOW);
-            });
+        while (true) {
+            Thread.sleep(Duration.ofMillis(250));
         }
-
-        pi.shutdown();
-    }
-
-    private void turnOff(List<DigitalOutput> leds) {
-        leds.forEach(led -> led.high());
     }
 }
