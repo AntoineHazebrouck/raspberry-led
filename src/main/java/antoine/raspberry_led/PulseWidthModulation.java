@@ -40,6 +40,7 @@ public class PulseWidthModulation extends PwmBase implements Runnable {
 
     @Override
     public Pwm on() throws IOException {
+        stopThread();
         startThreadIfNeeded();
         return this;
     }
@@ -71,13 +72,17 @@ public class PulseWidthModulation extends PwmBase implements Runnable {
         }
     }
 
+    @Override
     public void run() {
         log.info("loop started");
         super.onState = true;
 
+        int currentFrequency = getFrequency();
+        float currentDutyCycle = getDutyCycle();
+
         while (super.onState) {
-            int period = (1000000 / getFrequency());
-            int highTime = (int) (period * (getDutyCycle() / 100.0));
+            int period = (1000000 / currentFrequency);
+            int highTime = (int) (period * (currentDutyCycle / 100.0));
             int lowTime = (period - highTime);
 
             if (highTime != 0) {
@@ -99,8 +104,7 @@ public class PulseWidthModulation extends PwmBase implements Runnable {
 
     @Override
     public Pwm shutdown(Context context) throws ShutdownException {
-        log.info("shutting down");
-        stopThread();
+        off();
         return super.shutdown(context);
     }
 }
