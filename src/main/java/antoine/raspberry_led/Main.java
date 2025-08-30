@@ -14,19 +14,23 @@ public class Main {
         pwm.setFrequency(1000);
 
         for (int i = 0; i < 10; i++) {
-            double dutyCycle = 0;
-            while (dutyCycle < 100) {
-                pwm.on(dutyCycle);
-                // pwm.setDutyCycle(dutyCycle);
-                dutyCycle += 1;
-                Thread.sleep(10);
-            }
-            while (dutyCycle > 0) {
-                pwm.on(dutyCycle);
-                // pwm.setDutyCycle(dutyCycle);
-                dutyCycle -= 1;
-                Thread.sleep(10);
-            }
+            pwm.on(50, 1000);
+            Thread.sleep(100);
+            pwm.off();
+            Thread.sleep(100);
+            // double dutyCycle = 0;
+            // while (dutyCycle < 100) {
+            //     pwm.on(dutyCycle);
+            //     // pwm.setDutyCycle(dutyCycle);
+            //     dutyCycle += 1;
+            //     Thread.sleep(10);
+            // }
+            // while (dutyCycle > 0) {
+            //     pwm.on(dutyCycle);
+            //     // pwm.setDutyCycle(dutyCycle);
+            //     dutyCycle -= 1;
+            //     Thread.sleep(10);
+            // }
         }
     }
 }

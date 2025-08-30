@@ -64,26 +64,29 @@ public class PulseWidthModulation extends PwmBase {
 
     @Override
     public Pwm off() throws IOException {
-        // setDutyCycle(0);
-        // setFrequency(0);
-        return this;
+        setDutyCycle(0);
+        setFrequency(0);
+        return on();
     }
 
     private void loop() {
         log.info("loop started");
 
         while (loopRunning) {
-            int period = (1000000 / currentFrequency.get());
-            int highTime = (int) (period * (currentDutyCycle.get() / 100.0));
-            int lowTime = (period - highTime);
+            if (currentFrequency.get() != 0) {
+                int period = (1000000 / currentFrequency.get());
+                int highTime = (int) (period *
+                    (currentDutyCycle.get() / 100.0));
+                int lowTime = (period - highTime);
 
-            if (highTime != 0) {
-                digitalOutput.high();
-                delayUs(highTime);
-            }
-            if (lowTime != 0) {
-                digitalOutput.low();
-                delayUs(lowTime);
+                if (highTime != 0) {
+                    digitalOutput.high();
+                    delayUs(highTime);
+                }
+                if (lowTime != 0) {
+                    digitalOutput.low();
+                    delayUs(lowTime);
+                }
             }
         }
 
