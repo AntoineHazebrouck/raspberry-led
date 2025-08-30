@@ -13,14 +13,19 @@ import com.pi4j.library.gpiod.internal.GpioDContext;
 import com.pi4j.library.gpiod.internal.GpioLine;
 import com.pi4j.plugin.gpiod.provider.gpio.digital.GpioDDigitalOutput;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PulseWidthModulation extends PwmBase implements Runnable {
+public class PulseWidthModulation extends PwmBase {
 
     private final DigitalOutput digitalOutput;
 
-    private Thread instance;
+    private final Thread instance = new Thread(() -> {
+        this.loop();
+    });
+    private boolean loopRunning = false;
 
     public PulseWidthModulation(PwmProvider provider, PwmConfig config) {
         super(provider, config);
@@ -38,51 +43,38 @@ public class PulseWidthModulation extends PwmBase implements Runnable {
         Optional.ofNullable(config.frequency()).ifPresent(this::setFrequency);
     }
 
+    private final AtomicInteger currentFrequency = new AtomicInteger(
+        getFrequency()
+    );
+    private final AtomicReference<Float> currentDutyCycle =
+        new AtomicReference<>(getDutyCycle());
+
     @Override
     public Pwm on() throws IOException {
-        stopThread();
-        startThreadIfNeeded();
+        currentFrequency.set(getFrequency());
+        currentDutyCycle.set(getDutyCycle());
+
+        if (loopRunning == false) {
+            // init infinite loop
+            loopRunning = true;
+            instance.start();
+        }
         return this;
     }
 
     @Override
     public Pwm off() throws IOException {
-        stopThread();
+        // setDutyCycle(0);
+        // setFrequency(0);
         return this;
     }
 
-    private synchronized void stopThread() {
-        if (onState) {
-            onState = false;
-            try {
-                instance.join();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            digitalOutput.low(); // Ensure pin is low after stopping
-        }
-    }
-
-    private synchronized void startThreadIfNeeded() {
-        if (!onState) {
-            onState = true;
-            instance = new Thread(this::run);
-            instance.setDaemon(true);
-            instance.start();
-        }
-    }
-
-    @Override
-    public void run() {
+    private void loop() {
         log.info("loop started");
-        super.onState = true;
 
-        int currentFrequency = getFrequency();
-        float currentDutyCycle = getDutyCycle();
-
-        while (super.onState) {
-            int period = (1000000 / currentFrequency);
-            int highTime = (int) (period * (currentDutyCycle / 100.0));
+        while (loopRunning) {
+            int period = (1000000 / currentFrequency.get());
+            int highTime = (int) (period * (currentDutyCycle.get() / 100.0));
             int lowTime = (period - highTime);
 
             if (highTime != 0) {
@@ -94,6 +86,8 @@ public class PulseWidthModulation extends PwmBase implements Runnable {
                 delayUs(lowTime);
             }
         }
+
+        log.info("loop ended");
     }
 
     private void delayUs(long us) {
@@ -104,7 +98,12 @@ public class PulseWidthModulation extends PwmBase implements Runnable {
 
     @Override
     public Pwm shutdown(Context context) throws ShutdownException {
-        off();
+        loopRunning = false; // stop infinite loop
+        try {
+            instance.join();
+        } catch (InterruptedException e) {
+            instance.interrupt();
+        }
         return super.shutdown(context);
     }
 }
