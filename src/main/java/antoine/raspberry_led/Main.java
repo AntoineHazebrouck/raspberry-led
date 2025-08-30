@@ -1,7 +1,7 @@
 package antoine.raspberry_led;
 
 import com.pi4j.context.Context;
-import java.time.Duration;
+import com.pi4j.io.pwm.Pwm;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -10,27 +10,21 @@ import org.springframework.stereotype.Service;
 public class Main {
 
     public void run(Context pi) throws Exception {
-        var button = pi.digitalInput().create(18);
-        var led = pi.digitalOutput().create(17);
+        Pwm pwm = pi.pwm().create(17).on();
+        pwm.setFrequency(1000);
 
-        button.addListener(event -> {
-            log.info("event = " + event.state());
-            switch (event.state()) {
-                // it is reverted since the circuit is pull down (the 3.3V goes to the ground when pressing the button, and by default it goes through)
-                case HIGH -> {
-                    led.low();
-                }
-                case LOW -> {
-                    led.high();
-                }
-                default -> {
-                    log.error("button state unknown");
-                }
+        for (int i = 0; i < 10; i++) {
+            double dutyCycle = 0;
+            while (dutyCycle < 100) {
+                pwm.setDutyCycle(dutyCycle);
+                dutyCycle += 1;
+                Thread.sleep(10);
             }
-        });
-
-        while (true) {
-            Thread.sleep(Duration.ofMillis(250));
+            while (dutyCycle > 0) {
+                pwm.setDutyCycle(dutyCycle);
+                dutyCycle -= 1;
+                Thread.sleep(10);
+            }
         }
     }
 }
