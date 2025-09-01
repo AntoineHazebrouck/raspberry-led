@@ -1,4 +1,4 @@
-package antoine.raspberry_led;
+package antoine.raspberry_led.pwm;
 
 import com.pi4j.context.Context;
 import com.pi4j.exception.ShutdownException;
@@ -54,6 +54,11 @@ public class PulseWidthModulation extends PwmBase {
         currentFrequency.set(getFrequency());
         currentDutyCycle.set(getDutyCycle());
 
+        log.info("currentFrequency : {}", currentFrequency);
+        log.info("currentDutyCycle : {}", currentDutyCycle);
+        log.info("getFrequency() : {}", getFrequency());
+        log.info("getDutyCycle() : {}", getDutyCycle());
+
         if (loopRunning == false) {
             // init infinite loop
             loopRunning = true;
@@ -64,8 +69,8 @@ public class PulseWidthModulation extends PwmBase {
 
     @Override
     public Pwm off() throws IOException {
-        setDutyCycle(0);
-        setFrequency(0);
+        currentFrequency.set(0);
+        currentDutyCycle.set(0F);
         return on();
     }
 

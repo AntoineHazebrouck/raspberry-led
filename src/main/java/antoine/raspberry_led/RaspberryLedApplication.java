@@ -3,6 +3,8 @@ package antoine.raspberry_led;
 import com.pi4j.Pi4J;
 import com.pi4j.plugin.gpiod.provider.gpio.digital.GpioDDigitalInputProviderImpl;
 import com.pi4j.plugin.gpiod.provider.gpio.digital.GpioDDigitalOutputProviderImpl;
+
+import antoine.raspberry_led.pwm.PulseWidthModulationProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
