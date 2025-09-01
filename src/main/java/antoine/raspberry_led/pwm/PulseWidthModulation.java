@@ -54,11 +54,6 @@ public class PulseWidthModulation extends PwmBase {
         currentFrequency.set(getFrequency());
         currentDutyCycle.set(getDutyCycle());
 
-        log.info("currentFrequency : {}", currentFrequency);
-        log.info("currentDutyCycle : {}", currentDutyCycle);
-        log.info("getFrequency() : {}", getFrequency());
-        log.info("getDutyCycle() : {}", getDutyCycle());
-
         if (loopRunning == false) {
             // init infinite loop
             loopRunning = true;
